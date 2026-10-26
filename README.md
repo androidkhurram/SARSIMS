@@ -63,6 +63,38 @@ Pass `previous_filters` (JSON string of `session_filters` from the last success)
 
 Every successful search includes `accuracy_notice` and `source_checked_at` on each package.
 
+## Azure Function App + GitHub deploy
+
+`function_app.py` hosts:
+
+- Chat UI: `GET /`
+- Compare API: `POST /api/compare`
+- MCP webhook for AI Foundry: `/runtime/webhooks/mcp/sse`
+
+Push to `main` deploys to Function App `sarsims-fa` via `.github/workflows/deploy-azure-function.yml`.
+
+1. In Azure Portal open **sarsims-fa** → **Get publish profile** and download the file.
+2. In GitHub: **SARSIMS → Settings → Secrets and variables → Actions → New repository secret**.
+3. Name: `AZURE_FUNCTIONAPP_PUBLISH_PROFILE`. Paste the full publish-profile XML.
+4. Push to `main` (or run **Actions → Deploy to Azure Function App → Run workflow**).
+
+Chat UI after deploy: `https://sarsims-fa-b5bwceamapeva8cm.eastus2-01.azurewebsites.net/`
+
+### AI Foundry agent
+
+1. After a successful deploy, Azure Portal → **sarsims-fa** → **App keys** → copy the **mcp_extension** (or system) key.
+2. In AI Foundry, add an **MCP** tool to the agent.
+3. Server URL:
+
+```
+https://sarsims-fa-b5bwceamapeva8cm.eastus2-01.azurewebsites.net/runtime/webhooks/mcp/sse
+```
+
+4. Authenticate with header `x-functions-key: <mcp_extension key>` (or `code=` query).
+5. Tools the agent should use: `compare_sim_packages`, `list_active_sim_packages`, `get_package_details`, `refuse_off_topic`.
+
+Do not make the MCP webhook anonymous. Official-site lookups can take about a minute; the host timeout is 10 minutes.
+
 ## Tests
 
 ```bash

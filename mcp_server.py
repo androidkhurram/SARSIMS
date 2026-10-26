@@ -13,10 +13,14 @@ import sys
 
 from mcp.server.fastmcp import FastMCP
 
-from ksa_sim.advisor import compare_sim_packages as run_compare
-from ksa_sim.constants import ACCURACY_NOTICE, OFF_TOPIC_REPLY
+from ksa_sim.constants import ACCURACY_NOTICE
 from ksa_sim.env import load_env
-from ksa_sim.off_topic import is_off_topic, off_topic_payload
+from ksa_sim.web_api import (
+    handle_compare,
+    handle_list_packages,
+    handle_package_details,
+    handle_refuse,
+)
 
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 load_env()
@@ -38,31 +42,6 @@ mcp = FastMCP(
 )
 
 
-def _filters(previous_filters: str) -> dict | None:
-    if not previous_filters:
-        return None
-    try:
-        loaded = json.loads(previous_filters)
-    except json.JSONDecodeError:
-        return None
-    return loaded if isinstance(loaded, dict) else None
-
-
-def _run(request: str, previous_filters: str = "", require_clarification: bool = True) -> dict:
-    try:
-        return run_compare(
-            request,
-            previous_filters=_filters(previous_filters),
-            require_clarification=require_clarification,
-        )
-    except Exception:
-        logging.exception("SIM MCP tool failed")
-        return {
-            "error": "The SIM package search failed.",
-            "accuracy_notice": ACCURACY_NOTICE,
-        }
-
-
 @mcp.tool()
 def compare_sim_packages(request: str, previous_filters: str = "") -> str:
     """Compare and rank currently available KSA SIM packages for travellers.
@@ -77,7 +56,7 @@ def compare_sim_packages(request: str, previous_filters: str = "") -> str:
     real-time promo accuracy is not guaranteed without a fresh source check.
     Every call checks official operator websites only.
     """
-    return json.dumps(_run(request, previous_filters, require_clarification=True))
+    return json.dumps(handle_compare(request, previous_filters=previous_filters or None))
 
 
 @mcp.tool()
@@ -91,21 +70,7 @@ def list_active_sim_packages(
     Uses only active-looking results (discontinued/expired wording is dropped).
     Defaults: data+voice, 7 days, any budget. Always includes accuracy_notice.
     """
-    service = (service_type or "both").strip().lower()
-    if service not in {"data", "voice", "both"}:
-        service = "both"
-    budget = (budget_sar or "any").strip()
-    if budget.lower() in {"", "any", "none"}:
-        budget_text = "any budget"
-    else:
-        budget_text = f"under {budget} SAR"
-    request = (
-        f"{service} tourist SIM for {int(trip_days)} days {budget_text} "
-        "currently available in Saudi Arabia"
-    )
-    result = _run(request, require_clarification=False)
-    result["list_mode"] = True
-    return json.dumps(result)
+    return json.dumps(handle_list_packages(service_type, trip_days, budget_sar))
 
 
 @mcp.tool()
@@ -115,17 +80,7 @@ def get_package_details(package_query: str) -> str:
     Performs a fresh official-site check. Returns ranked matching candidates
     plus accuracy_notice. Off-topic queries get the fixed refusal.
     """
-    query = (package_query or "").strip()
-    if not query:
-        return json.dumps({"error": "package_query is required."})
-    if is_off_topic(query):
-        return json.dumps(off_topic_payload())
-    request = (
-        f"{query} tourist SIM Saudi Arabia current price plan currently available any budget"
-    )
-    result = _run(request, require_clarification=False)
-    result["details_mode"] = True
-    return json.dumps(result)
+    return json.dumps(handle_package_details(package_query))
 
 
 @mcp.tool()
@@ -135,14 +90,7 @@ def refuse_off_topic(request: str) -> str:
     Use when the question is outside KSA SIM / voice / data packages from
     service providers (visa, hotels, weather, etc.).
     """
-    return json.dumps(
-        {
-            "off_topic": True,
-            "request": request,
-            "message": OFF_TOPIC_REPLY,
-            "packages": [],
-        }
-    )
+    return json.dumps(handle_refuse(request))
 
 
 if __name__ == "__main__":

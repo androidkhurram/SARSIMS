@@ -1,0 +1,15 @@
+.git*
+.venv
+.python_packages
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.cursor
+.azure
+.env
+local.settings.json
+tests
+*.egg-info
+dist
+build

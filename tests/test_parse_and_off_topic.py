@@ -18,6 +18,7 @@ from ksa_sim.off_topic import is_off_topic, off_topic_payload
 from ksa_sim.official import filter_packages, _parse_mobily, _parse_stc, _parse_zain_json
 from ksa_sim.parse import parse_request
 from ksa_sim.rank import build_recommendation, rank_packages
+from ksa_sim.web_api import handle_compare, handle_list_packages, handle_refuse
 from ksa_sim.session import merge_parsed, should_merge_with_previous
 
 
@@ -443,6 +444,24 @@ class AdvisorTests(unittest.TestCase):
         result = compare_sim_packages("What is the weather in Riyadh?")
         self.assertTrue(result["off_topic"])
         self.assertEqual(result["message"], OFF_TOPIC_REPLY)
+
+    def test_web_api_off_topic_marks_refuse_tool(self):
+        result = handle_compare("What is the weather in Riyadh?")
+        self.assertTrue(result["off_topic"])
+        self.assertEqual(result["message"], OFF_TOPIC_REPLY)
+        self.assertEqual(result["mcp_tool"], "refuse_off_topic")
+
+    def test_web_api_empty_request_errors(self):
+        result = handle_compare("  ")
+        self.assertEqual(result.get("error"), "request is required")
+
+    def test_web_api_refuse_and_list_defaults(self):
+        refused = handle_refuse("visa appointment")
+        self.assertTrue(refused["off_topic"])
+        self.assertEqual(refused["mcp_tool"], "refuse_off_topic")
+        listed = handle_list_packages("both", 7, "any")
+        self.assertEqual(listed["mcp_tool"], "list_active_sim_packages")
+        self.assertTrue(listed.get("needs_clarification") or listed.get("packages") is not None or listed.get("list_mode"))
 
     def test_ranks_from_official_catalog_and_adds_accuracy_notice(self):
         catalog = [

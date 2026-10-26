@@ -336,7 +336,7 @@ PAGE = r"""<!DOCTYPE html>
           <textarea id="chatInput" rows="2" placeholder="e.g. data + voice SIM for 7 days under 100 SAR" required></textarea>
           <button id="sendBtn" type="submit">Send</button>
         </div>
-        <div class="hint">Local only · http://127.0.0.1:__PORT__ · answers come from MCP tools · Enter to send</div>
+        <div class="hint">Official KSA operator websites · Enter to send</div>
       </form>
     </section>
   </main>

@@ -1,0 +1,26 @@
+{
+  "version": "2.0",
+  "functionTimeout": "00:10:00",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[4.*, 5.0.0)"
+  },
+  "extensions": {
+    "http": {
+      "routePrefix": ""
+    },
+    "mcp": {
+      "instructions": "KSA tourist/visitor SIM advisor. Rank currently available packages from official operator websites only (STC, Mobily, Zain, Lebara, Virgin Mobile). Clarify service type, trip days, and budget. Refuse off-topic questions. Results are a source check, not a live promo guarantee.",
+      "serverName": "ksa-sim",
+      "serverVersion": "1.0.0"
+    }
+  }
+}
