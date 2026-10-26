@@ -1,0 +1,15 @@
+.venv/
+.python_packages/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+local.settings.json
+.env
+.azure/
+bin/
+obj/
+.python_packages
+*.egg-info/
+dist/
+build/

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ksa-sim": {
+      "command": "python",
+      "args": ["mcp_server.py"]
+    }
+  }
+}
