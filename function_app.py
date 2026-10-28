@@ -70,10 +70,18 @@ def _mcp_arguments(context) -> dict:
     return arguments if isinstance(arguments, dict) else payload
 
 
-@app.route(route="", methods=["GET"])
-@app.route(route="index.html", methods=["GET"])
-def index(req: func.HttpRequest) -> func.HttpResponse:
+def _index_page() -> func.HttpResponse:
     return func.HttpResponse(PAGE, mimetype="text/html; charset=utf-8", headers=_cors())
+
+
+@app.route(route="", methods=["GET"])
+def index(req: func.HttpRequest) -> func.HttpResponse:
+    return _index_page()
+
+
+@app.route(route="index.html", methods=["GET"])
+def index_html(req: func.HttpRequest) -> func.HttpResponse:
+    return _index_page()
 
 
 @app.route(route="api/status", methods=["GET"])
